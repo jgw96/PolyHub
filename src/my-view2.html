@@ -1,0 +1,106 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-view2">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+			}
+			
+			.content {
+				margin: 10px;
+			}
+			
+			paper-card {
+				margin-bottom: 10px;
+			}
+			
+			.description {
+				-webkit-margin-before: 0;
+			}
+			
+			.moreInfo {
+				-webkit-margin-before: 0;
+				-webkit-margin-after: 0;
+			}
+			
+			paper-button {
+				color: var(--app-primary-color);
+			}
+			
+			.card-actions paper-button {
+				font-size: 15px;
+			}
+
+			h1 {
+				color: var(--app-primary-color);
+			}
+		</style>
+
+		<div class="content">
+			<h1>Favorite Repos</h1>
+			<iron-list id="list" items="[[repos]]" as="repo">
+				<template>
+					<div>
+						<paper-card heading="[[repo.name]]">
+							<div class="card-content">
+								<p class="description">[[repo.description]]</p>
+
+								<div>
+									<p class="moreInfo">Open Issues: [[repo.open_issues]]</p>
+									<p class="moreInfo">Stars: [[repo.stargazers_count]]</p>
+								</div>
+							</div>
+							<div class="card-actions">
+								<paper-button on-tap="issues">ISSUES</paper-button>
+								<paper-button on-tap="delete">REMOVE</paper-button>
+							</div>
+						</paper-card>
+					</div>
+				</template>
+			</iron-list>
+		</div>
+
+	</template>
+
+	<script>
+		class MyView2 extends Polymer.Element {
+			static get is() { return 'my-view2'; }
+
+			static get properties() {
+				return {
+					repos: Array
+				}
+			}
+
+			async connectedCallback() {
+				super.connectedCallback();
+        
+				this.repos = await idbKeyval.get('favorites');
+				console.log(this.repos);
+			}
+
+			issues($event) {
+				const repo = $event.model.__data.repo;
+				window.history.pushState({}, null, '/issues-view' + '?' + 'repo=' + repo.name + '&' + 'owner=' + repo.owner.login);
+        window.dispatchEvent(new CustomEvent('location-changed'));
+			}
+		}
+
+		window.customElements.define(MyView2.is, MyView2);
+	</script>
+</dom-module>

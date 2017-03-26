@@ -1,0 +1,81 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-view3">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding: 10px;
+			}
+			
+			main {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+		</style>
+
+		<iron-ajax id="userAjax" url="https://api.github.com/user?access_token={{token}}" handle-as="json" on-response="handleResponse"
+		 last-response="{{userData}}"></iron-ajax>
+
+		<main>
+			<iron-image style="width:200px; height:200px; background: grey; border-radius: 50%;" sizing="cover" preload src="{{userImage}}"></iron-image>
+			<h1>[[userData.name]]</h1>
+		</main>
+
+		<p>
+			Email: [[userData.email]]
+		</p>
+		<p>
+			Company: [[userData.company]]
+		</p>
+		<p>
+			Followers: [[userData.followers]]
+		</p>
+		<p>
+			Public repos: [[userData.public_repos]]
+		</p>
+	</template>
+
+	<script>
+		class MyView3 extends Polymer.Element {
+			static get is() { return 'my-view3'; }
+
+			static get properties() {
+				return {
+					userData: Object,
+					token: String,
+					userImage: String
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+				const userData = JSON.parse(localStorage.getItem('userData'));
+				this.token = userData.credential.accessToken;
+
+				this.$.userAjax.generateRequest();
+			}
+
+			handleResponse() {
+				console.log(this.userData);
+				this.userImage = this.userData.avatar_url;
+			}
+		}
+
+		window.customElements.define(MyView3.is, MyView3);
+	</script>
+</dom-module>

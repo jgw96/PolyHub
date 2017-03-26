@@ -1,0 +1,94 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-view1">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding: 10px;
+			}
+			
+			paper-button {
+				background: var(--app-primary-color);
+				color: white;
+				width: 100%;
+			}
+			
+			.card {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+			
+			h1 {
+				text-align: center;
+			}
+		</style>
+
+		<firebase-app auth-domain="polyhub-28ed3.firebaseapp.com" database-url="https://polyhub-28ed3.firebaseio.com" api-key="AIzaSyDMZFvR53ivGYp_1AJ_6VszraC0k_z-uiw">
+		</firebase-app>
+		<firebase-auth id="auth" user="{{user}}" provider="github">
+		</firebase-auth>
+
+		<div class="card">
+			<iron-image style="width:160px; height:160px; margin-bottom: 15px;" sizing="cover" preload src="../images/icon.png"></iron-image>
+			<h1>Manage Github issues the easy way!</h1>
+			<paper-button raised on-tap="login">Login with Github</paper-button>
+		</div>
+	</template>
+
+	<script>
+		class MyView1 extends Polymer.Element {
+			static get is() { return 'my-view1'; }
+
+			static get properties() {
+				return {
+					user: Object
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				const provider = this.$.auth._providerFromName('github');
+				provider.addScope('public_repo');
+			}
+
+			login() {
+				this.$.auth.signInWithPopup()
+					.then((response) => {
+						console.log(response);
+
+						requestIdleCallback(() => {
+							console.log(response.credential);
+							idbKeyval.set('userData', response.credential);
+
+							window.history.pushState({}, null, '/main-view');
+							window.dispatchEvent(new CustomEvent('location-changed'));
+						});
+					})
+					.catch((err) => {
+						console.log(err);
+					})
+			}
+		}
+
+		window.customElements.define(MyView1.is, MyView1);
+	</script>
+</dom-module>

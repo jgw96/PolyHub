@@ -1,0 +1,199 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-main-view">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+			}
+			
+			.content {
+				margin: 10px;
+			}
+			
+			paper-card {
+				margin-bottom: 10px;
+			}
+			
+			.description {
+				-webkit-margin-before: 0;
+			}
+			
+			.moreInfo {
+				-webkit-margin-before: 0;
+				-webkit-margin-after: 0;
+			}
+			
+			paper-button {
+				color: var(--app-primary-color);
+			}
+			
+			.card-actions paper-button {
+				font-size: 15px;
+			}
+			
+			.nextButton {
+				float: right;
+			}
+			
+			h1 {
+				color: var(--app-primary-color);
+			}
+			
+			paper-fab {
+				position: fixed;
+				bottom: 16px;
+				right: 16px;
+			}
+		</style>
+
+		<iron-ajax id="reposAjax" url="https://api.github.com/user/repos?access_token={{token}}&page={{page}}" handle-as="json" on-response="handleReposResponse"
+		 last-response="{{repoData}}"></iron-ajax>
+
+		<div class="content">
+			<h1>Repos</h1>
+			<iron-list id="list" items="[[repoData]]" as="repo">
+				<template>
+					<div>
+						<paper-card heading="[[repo.name]]">
+							<div class="card-content">
+								<p class="description">[[repo.description]]</p>
+
+								<div>
+									<p class="moreInfo">Open Issues: [[repo.open_issues]]</p>
+									<p class="moreInfo">Stars: [[repo.stargazers_count]]</p>
+								</div>
+							</div>
+							<div class="card-actions">
+								<paper-button on-tap="issues">ISSUES</paper-button>
+								<paper-button on-tap="favorite">FAVORITE</paper-button>
+							</div>
+						</paper-card>
+					</div>
+				</template>
+			</iron-list>
+
+			<div class="bottomBar">
+				<paper-button on-tap="prevPage">Previous</paper-button>
+				<paper-button class="nextButton" on-tap="nextPage">Next</paper-button>
+			</div>
+		</div>
+
+		<paper-fab icon="search" on-tap="search"></paper-fab>
+
+		<paper-toast id="savedToast" text="Repo saved to favorites"></paper-toast>
+		<paper-toast id="errorToast" text="Error saving repo"></paper-toast>
+
+		<paper-dialog id="searchDialog">
+			<h2>Search Repos</h2>
+			<div>
+				<paper-input label="Search Term" value="{{searchTerm}}"></paper-input>
+			</div>
+			<div class="buttons">
+				<paper-button dialog-dismiss>Cancel</paper-button>
+				<paper-button dialog-confirm autofocus on-tap="searchConfirm">Search</paper-button>
+			</div>
+		</paper-dialog>
+	</template>
+
+	<script>
+		class MyMainView extends Polymer.Element {
+			static get is() { return 'my-main-view'; }
+
+			static get properties() {
+				return {
+					token: String,
+					repoData: Array,
+					page: {
+						type: Number,
+						value: 1
+					},
+					favorites: Array,
+					searchTerm: String,
+					originalRepoData: Array
+				};
+			}
+
+			constructor() {
+				super();
+
+				const faveGrab = idbKeyval.get('favorites');
+				faveGrab.then((val) => {
+					if (val !== undefined) {
+						this.favorites = val;
+					} else {
+						this.favorites = [];
+					}
+				});
+			}
+
+			async connectedCallback() {
+				super.connectedCallback();
+
+				const userData = await idbKeyval.get('userData');
+				this.token = userData.accessToken;
+
+				requestIdleCallback(() => {
+					this.$.reposAjax.generateRequest();
+				});
+			}
+
+			handleReposResponse() {
+				console.log(this.repoData);
+				this.originalRepoData = this.repoData;
+			}
+
+			nextPage() {
+				this.page = ++this.page;
+				this.$.reposAjax.generateRequest();
+			}
+
+			prevPage() {
+				this.page = --this.page;
+				this.$.reposAjax.generateRequest();
+			}
+
+			async favorite($event) {
+				console.log($event.model.__data.repo);
+				this.push('favorites', $event.model.__data.repo);
+
+				try {
+					await idbKeyval.set('favorites', this.favorites);
+					this.$.savedToast.open();
+				} catch (e) {
+					this.$.errorToast.open();
+				}
+			}
+
+			search() {
+				this.$.searchDialog.open();
+			}
+
+			searchConfirm() {
+				this.repoData = this.originalRepoData.filter((repo) => {
+					return repo.name === this.searchTerm;
+				});
+			}
+
+			issues($event) {
+				const repo = $event.model.__data.repo;
+				window.history.pushState({}, null, '/issues-view' + '?' + 'repo=' + repo.name + '&' + 'owner=' + repo.owner.login);
+        window.dispatchEvent(new CustomEvent('location-changed'));
+			}
+		}
+
+		window.customElements.define(MyMainView.is, MyMainView);
+	</script>
+</dom-module>

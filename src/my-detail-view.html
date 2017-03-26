@@ -1,0 +1,51 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+
+<dom-module id="my-detail-view">
+	<template>
+		<style>
+			:host {
+				display: block;
+				padding: 10px 20px;
+			}
+		</style>
+
+		<app-location route="{{route}}"></app-location>
+		<app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
+
+		<iron-ajax id="detailAjax" url="https://api.github.com/repos/[[subroute.__queryParams.owner]]/[[subroute.__queryParams.repo]]/issues/[[subroute.__queryParams.number]]?access_token=[[token]]"
+		 handle-as="json" on-response="handleDetailResponse" last-response="{{detailData}}"></iron-ajax>
+
+	</template>
+
+	<script>
+		class MyDetailView extends Polymer.Element {
+			static get is() { return 'my-detail-view'; }
+
+			static get properties() {
+				return {
+					detailData: Object,
+					routeData: Object,
+					token: String
+				}
+			}
+
+			async connectedCallback() {
+				super.connectedCallback();
+
+				const userData = await idbKeyval.get('userData');
+				console.log(userData);
+				this.token = userData.accessToken;
+
+				this.$.detailAjax.generateRequest();
+			}
+
+			handleDetailResponse() {
+				console.log(this.detailData);
+			}
+		}
+
+		window.customElements.define(MyDetailView.is, MyDetailView);
+	</script>
