@@ -43,12 +43,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 		<firebase-app auth-domain="polyhub-28ed3.firebaseapp.com" database-url="https://polyhub-28ed3.firebaseio.com" api-key="AIzaSyDMZFvR53ivGYp_1AJ_6VszraC0k_z-uiw">
 		</firebase-app>
-		<firebase-auth id="auth" user="{{user}}" provider="github">
+		<firebase-auth id="auth" user="{{user}}">
 		</firebase-auth>
 
 		<div class="card">
 			<iron-image style="width:160px; height:160px; margin-bottom: 15px;" sizing="cover" preload src="../images/icon.png"></iron-image>
-			<h1>Manage Github issues the easy way!</h1>
+			<h1>TLDR Github but faster!</h1>
 			<paper-button raised on-tap="login">Login with Github</paper-button>
 		</div>
 	</template>
@@ -65,18 +65,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 			connectedCallback() {
 				super.connectedCallback();
-
-				const provider = this.$.auth._providerFromName('github');
-				provider.addScope('public_repo');
 			}
 
 			login() {
-				this.$.auth.signInWithPopup()
+				const auth = this.$.auth;
+			  const github = new firebase.auth.GithubAuthProvider();
+				github.addScope('repo')
+				github.addScope('repo');
+				github.addScope('user');
+				github.addScope('public_repo');
+
+				this.$.auth.signInWithPopup(github)
 					.then((response) => {
-						console.log(response);
 
 						requestIdleCallback(() => {
-							console.log(response.credential);
 							idbKeyval.set('userData', response.credential);
 
 							window.history.pushState({}, null, '/main-view');

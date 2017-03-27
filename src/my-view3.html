@@ -11,6 +11,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view3">
@@ -62,16 +64,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				};
 			}
 
-			connectedCallback() {
+			async connectedCallback() {
 				super.connectedCallback();
-				const userData = JSON.parse(localStorage.getItem('userData'));
-				this.token = userData.credential.accessToken;
+				const userData = await idbKeyval.get('userData');
+				this.token = userData.accessToken;
 
 				this.$.userAjax.generateRequest();
 			}
 
 			handleResponse() {
-				console.log(this.userData);
 				this.userImage = this.userData.avatar_url;
 			}
 		}

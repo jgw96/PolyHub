@@ -1,14 +1,40 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="shared-styles.html">
 
 <dom-module id="my-detail-view">
 	<template>
-		<style>
+		<style include="shared-styles">
 			:host {
 				display: block;
-				padding: 10px 20px;
+				padding: 10px;
+			}
+			
+			.topBlock {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+			
+			h2 {
+				-webkit-margin-before: 0;
+				-webkit-margin-after: 0;
+				font-size: 1em;
+			}
+			
+			main {
+				margin-top: 40px;
+			}
+
+			paper-fab {
+				position: fixed;
+				bottom: 16px;
+				right: 16px;
 			}
 		</style>
 
@@ -17,6 +43,18 @@
 
 		<iron-ajax id="detailAjax" url="https://api.github.com/repos/[[subroute.__queryParams.owner]]/[[subroute.__queryParams.repo]]/issues/[[subroute.__queryParams.number]]?access_token=[[token]]"
 		 handle-as="json" on-response="handleDetailResponse" last-response="{{detailData}}"></iron-ajax>
+
+			<div class="topBlock">
+				<h1>[[detailData.title]]</h1>
+				<h2>Opened by [[detailData.user.login]] on [[goodDate]]</h2>
+				<iron-image style="width:100px; height:100px; border-radius: 50%; background-color: lightgray;" sizing="cover" preload src="[[detailData.user.avatar_url]]"></iron-image>
+			</div>
+
+			<main>
+				<p>[[detailData.body]]</p>
+			</main>
+
+			<paper-fab on-tap="visit" icon="link"></paper-fab>
 
 	</template>
 
@@ -28,7 +66,9 @@
 				return {
 					detailData: Object,
 					routeData: Object,
-					token: String
+					labelData: Object,
+					token: String,
+					goodDate: Date
 				}
 			}
 
@@ -36,15 +76,24 @@
 				super.connectedCallback();
 
 				const userData = await idbKeyval.get('userData');
-				console.log(userData);
 				this.token = userData.accessToken;
 
 				this.$.detailAjax.generateRequest();
 			}
 
 			handleDetailResponse() {
-				console.log(this.detailData);
+				const date = new Date(this.detailData.created_at);
+				const day = date.getDate();
+				const month = date.getMonth();
+				const year = date.getFullYear();
+
+				this.goodDate = `${month}/${day}/${year}`;
 			}
+
+			visit() {
+				window.open(this.detailData.html_url);
+			}
+			
 		}
 
 		window.customElements.define(MyDetailView.is, MyDetailView);

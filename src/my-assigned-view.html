@@ -1,0 +1,88 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-assigned-view">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding-top: 10px;
+			}
+
+			p {
+				-webkit-margin-before: 0;
+				-webkit-margin-after: 0;
+			}
+			
+			.issueTitle {
+				font-weight: bold;
+			}
+
+			paper-item-body {
+				margin-left: 15px;
+			}
+
+			paper-item {
+				margin-top: 10px;
+			}
+		</style>
+
+		<iron-ajax id="issuesAjax" url="https://api.github.com/issues?access_token={{token}}&limit=100" handle-as="json" on-response="handleIssuesResponse"
+		 last-response="{{issueData}}"></iron-ajax>
+
+		<iron-list items="[[issueData]]" as="issue">
+			<template>
+				<div>
+					<paper-item on-tap="issueDetail">
+						<iron-image style="width: 60px; height: 60px; border-radius: 50%; background-color: lightgray;" sizing="cover" preload src="[[issue.user.avatar_url]]"></iron-image>
+						<paper-item-body two-line>
+							<div class="issueTitle">[[issue.title]]</div>
+							<div>
+								<p>Comments: [[issue.comments]]</p>
+							</div>
+							<div secondary>[[issue.created_at]]</div>
+						</paper-item-body>
+					</paper-item>
+				</div>
+			</template>
+		</iron-list>
+
+	</template>
+
+	<script>
+		class MyAssignedView extends Polymer.Element {
+			static get is() { return 'my-assigned-view'; }
+
+			async connectedCallback() {
+				super.connectedCallback();
+
+				const userData = await idbKeyval.get('userData');
+				this.token = userData.accessToken;
+
+				requestIdleCallback(() => {
+					this.$.issuesAjax.generateRequest();
+				});
+			}
+
+			handleIssuesResponse() {
+				this.issueData.forEach((issue) => {
+					issue.created_at = new Date(issue.created_at);
+				});
+			}
+
+			issueDetail($event) {
+				const issue = $event.model.__data.issue;
+
+				window.history.pushState({}, null, '/detail-view' + '?' + 'owner=' + issue.repository.owner.login + '&' + 'repo=' + issue.repository.name + '&' + 'number=' + issue.number);
+        window.dispatchEvent(new CustomEvent('location-changed'));
+			}
+		}
+
+		window.customElements.define(MyAssignedView.is, MyAssignedView);
+	</script>
+</dom-module>

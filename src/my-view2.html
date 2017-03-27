@@ -9,9 +9,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view2">
@@ -49,6 +51,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			h1 {
 				color: var(--app-primary-color);
 			}
+
+			.noRepos {
+				color: black;
+				text-align: center;
+			}
 		</style>
 
 		<div class="content">
@@ -75,6 +82,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			</iron-list>
 		</div>
 
+		<template is="dom-if" if="{{noRepos}}">
+			<h1 class="noRepos">No repos added yet</h1>
+		</template>
+
+		<paper-toast id="deleteToast" text="Repo removed"></paper-toast>
+
 	</template>
 
 	<script>
@@ -83,7 +96,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 			static get properties() {
 				return {
-					repos: Array
+					repos: Array,
+					noRepos: Boolean
 				}
 			}
 
@@ -91,13 +105,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				super.connectedCallback();
         
 				this.repos = await idbKeyval.get('favorites');
-				console.log(this.repos);
+				if (this.repos === undefined) {
+					this.noRepos = true;
+				} else {
+					this.noRepos = false;
+				}
 			}
 
 			issues($event) {
 				const repo = $event.model.__data.repo;
+
 				window.history.pushState({}, null, '/issues-view' + '?' + 'repo=' + repo.name + '&' + 'owner=' + repo.owner.login);
         window.dispatchEvent(new CustomEvent('location-changed'));
+			}
+
+			async delete($event) {
+				const repo = $event.model.__data.repo;
+
+				const index = this.repos.findIndex((element) => {
+					return element.name === repo.name;
+				});
+
+				this.splice('repos', index, 1);
+				await idbKeyval.set('favorites', this.repos);
+
+				navigator.vibrate(300);
+
+				if (this.repos.length === 0) {
+					await idbKeyval.delete('favorites');
+					this.noRepos = true;
+				}
+
+				requestIdleCallback(() => {
+					this.$.deleteToast.open();
+				});
 			}
 		}
 
