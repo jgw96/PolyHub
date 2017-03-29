@@ -1,10 +1,9 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/iron-icons/social-icons.html">
-<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
-<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
@@ -60,44 +59,53 @@
 				right: 16px;
 			}
 			
-			paper-icon-button {
+			.shareButton {
 				position: fixed;
 				top: 15px;
 				right: 10px;
 			}
+			
+			.bottomBar {
+				display: flex;
+				justify-content: flex-start;
+			}
 		</style>
 
 		<iron-ajax id="reposAjax" url="https://api.github.com/user/repos?access_token={{token}}&page={{page}}" handle-as="json" on-response="handleReposResponse"
-		 last-response="{{repoData}}"></iron-ajax>
+		 last-response="{{repoData}}" loading="{{loading}}"></iron-ajax>
 
 		<div class="content">
 			<h1>Repos</h1>
-			<iron-list id="list" items="[[repoData]]" as="repo">
-				<template>
-					<div>
-						<paper-card heading="[[repo.name]]">
-							<div class="card-content">
-								<paper-icon-button on-tap="share" icon="social:share"></paper-icon-button>
-								<p class="description">[[repo.description]]</p>
 
-								<div>
-									<p class="moreInfo">Open Issues: [[repo.open_issues]]</p>
-									<p class="moreInfo">Stars: [[repo.stargazers_count]]</p>
+			<template is="dom-if" if="{{!loading}}">
+				<iron-list id="list" items="[[repoData]]" as="repo">
+					<template>
+						<div>
+							<paper-card heading="[[repo.name]]">
+								<div class="card-content">
+									<paper-icon-button class="shareButton" on-tap="share" icon="social:share"></paper-icon-button>
+									<p class="description">[[repo.description]]</p>
+
+									<div>
+										<p class="moreInfo">Open Issues: [[repo.open_issues]]</p>
+										<p class="moreInfo">Stars: [[repo.stargazers_count]]</p>
+									</div>
 								</div>
-							</div>
-							<div class="card-actions">
-								<paper-button on-tap="issues">ISSUES</paper-button>
-								<paper-button on-tap="favorite">FAVORITE</paper-button>
-							</div>
-						</paper-card>
-					</div>
-				</template>
-			</iron-list>
+								<div class="card-actions">
+									<paper-button on-tap="issues">ISSUES</paper-button>
+									<paper-button on-tap="favorite">FAVORITE</paper-button>
+								</div>
+							</paper-card>
+						</div>
+					</template>
+				</iron-list>
 
-			<div class="bottomBar">
-				<paper-button on-tap="prevPage">Previous</paper-button>
-				<paper-button class="nextButton" on-tap="nextPage">Next</paper-button>
-			</div>
+				<div class="bottomBar">
+					<paper-button on-tap="prevPage">Previous</paper-button>
+					<paper-button class="nextButton" on-tap="nextPage">Next</paper-button>
+					<paper-icon-button class="refreshButton" icon="refresh" on-tap="refresh"></paper-icon-button>
+				</div>
+			</template>
 		</div>
 
 		<paper-fab icon="search" on-tap="search"></paper-fab>
@@ -131,7 +139,8 @@
 					},
 					favorites: Array,
 					searchTerm: String,
-					originalRepoData: Array
+					originalRepoData: Array,
+					loading: Boolean
 				};
 			}
 
@@ -191,9 +200,7 @@
 
 			searchConfirm() {
 				this.repoData = this.originalRepoData.filter((repo) => {
-					if (repo.name.indexOf(this.searchTerm) !== -1) {
-						return repo.name === this.searchTerm;
-					}
+					return repo.name === this.searchTerm;
 				});
 			}
 
@@ -213,6 +220,12 @@
 					url: repo.html_url
 				}).then(() => console.log('Successful share'))
 					.catch(error => console.log('Error sharing:', error));
+			}
+
+			refresh() {
+				requestIdleCallback(() => {
+					this.$.reposAjax.generateRequest();
+				});
 			}
 		}
 

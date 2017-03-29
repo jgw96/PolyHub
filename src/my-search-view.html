@@ -1,0 +1,128 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-search-view">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding: 10px;
+			}
+			
+			paper-dropdown-menu {
+				width: 100%;
+			}
+			
+			paper-fab {
+				position: fixed;
+				right: 16px;
+				bottom: 16px;
+			}
+			
+			paper-item-body {
+				margin-left: 15px;
+			}
+			
+			paper-item {
+				margin-top: 10px;
+			}
+
+			.starIcon {
+				color: #FFEB3B;
+			}
+		</style>
+
+		<iron-ajax id="searchAjax" url="https://api.github.com/search/[[selected]]?q=[[searchTerm]]&access_token={{token}}&page={{page}}"
+		 handle-as="json" on-response="handleSearchResponse" last-response="{{searchData}}"></iron-ajax>
+
+		<paper-card heading="Search">
+			<div class="card-content">
+				<paper-dropdown-menu label="What to search" selected-item-label="{{selected}}">
+					<paper-listbox class="dropdown-content">
+						<paper-item label="repositories">Repositories</paper-item>
+						<paper-item label="users">Users</paper-item>
+					</paper-listbox>
+				</paper-dropdown-menu>
+
+				<paper-input label="Search query" value="{{searchTerm}}"></paper-input>
+			</div>
+		</paper-card>
+
+		<iron-list items="[[itemsToSearch]]" as="item">
+			<template>
+				<div>
+					<paper-item on-tap="goTo">
+						<iron-image style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.owner.avatar_url]]"></iron-image>
+						<paper-item-body two-line>
+							<div>[[item.full_name]]</div>
+							<div secondary>[[item.description]]</div>
+
+							<div>
+								<iron-icon class="starIcon" icon="star"></iron-icon> <span>[[item.stargazers_count]]</span>
+							</div>
+						</paper-item-body>
+					</paper-item>
+				</div>
+			</template>
+		</iron-list>
+
+		<paper-fab icon="search" on-tap="search"></paper-fab>
+
+	</template>
+
+	<script>
+		class MySearchView extends Polymer.Element {
+			static get is() { return 'my-search-view'; }
+
+			static get properties() {
+				return {
+					searchData: Object,
+					itemsToSearch: Array,
+					token: String,
+					page: {
+						type: Number,
+						value: 1
+					},
+					selected: String,
+					searchTerm: String
+				}
+			}
+
+			async connectedCallback() {
+				super.connectedCallback();
+
+				const userData = await idbKeyval.get('userData');
+				this.token = userData.accessToken;
+			}
+
+			handleSearchResponse() {
+				console.log(this.searchData);
+				this.itemsToSearch = this.searchData.items;
+			}
+
+			search() {
+				console.log(this.selected);
+				console.log(this.searchTerm);
+				this.$.searchAjax.generateRequest();
+			}
+
+			goTo($event) {
+				console.log($event);
+				window.open($event.model.__data.item.html_url);
+			}
+		}
+
+		window.customElements.define(MySearchView.is, MySearchView);
+	</script>
+</dom-module>
