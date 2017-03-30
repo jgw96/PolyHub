@@ -1,4 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
@@ -13,6 +14,7 @@
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-search-view">
@@ -50,6 +52,9 @@
 		<iron-ajax id="searchAjax" url="https://api.github.com/search/[[selected]]?q=[[searchTerm]]&access_token={{token}}&page={{page}}"
 		 handle-as="json" on-response="handleSearchResponse" last-response="{{searchData}}"></iron-ajax>
 
+		<iron-ajax id="starAjax" url="https://api.github.com/user/starred/[[detailData.owner.login]]/[[detailData.name]]?access_token={{token}}"
+		 handle-as="json" method="PUT" on-response="handleStarredResponse" last-response="{{starData}}"></iron-ajax>
+
 		<paper-card heading="Search">
 			<div class="card-content">
 				<paper-dropdown-menu label="What to search" selected-item-label="{{selected}}">
@@ -66,17 +71,28 @@
 		<iron-list items="[[itemsToSearch]]" as="item">
 			<template>
 				<div>
-					<paper-item on-tap="detail">
-						<iron-image style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.owner.avatar_url]]"></iron-image>
-						<paper-item-body two-line>
-							<div>[[item.full_name]]</div>
-							<div secondary>[[item.description]]</div>
+					<template is="dom-if" if="{{!usersSelected}}">
+						<paper-item on-tap="detail">
+							<iron-image style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.owner.avatar_url]]"></iron-image>
+							<paper-item-body two-line>
+								<div>[[item.full_name]]</div>
+								<div secondary>[[item.description]]</div>
 
-							<div>
-								<iron-icon class="starIcon" icon="star"></iron-icon> <span>[[item.stargazers_count]]</span>
-							</div>
-						</paper-item-body>
-					</paper-item>
+								<div>
+									<iron-icon class="starIcon" icon="star"></iron-icon> <span>[[item.stargazers_count]]</span>
+								</div>
+							</paper-item-body>
+						</paper-item>
+					</template>
+
+					<template is="dom-if" if="{{usersSelected}}">
+						<paper-item on-tap="userDetail">
+							<iron-image style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.avatar_url]]"></iron-image>
+							<paper-item-body two-line>
+								<div>[[item.login]]</div>
+							</paper-item-body>
+						</paper-item>
+					</template>
 				</div>
 			</template>
 		</iron-list>
@@ -99,6 +115,8 @@
 			</div>
 		</paper-dialog>
 
+		<paper-toast id="starredToast" text="Repo starred"></paper-toast>
+
 	</template>
 
 	<script>
@@ -116,7 +134,9 @@
 					},
 					selected: String,
 					searchTerm: String,
-					detailData: Object
+					detailData: Object,
+					starData: Object,
+					usersSelected: Boolean
 				}
 			}
 
@@ -134,6 +154,11 @@
 
 			search() {
 				console.log(this.selected);
+				if (this.selected === 'users') {
+					this.usersSelected = true;
+				} else {
+					this.usersSelected = false;
+				}
 				console.log(this.searchTerm);
 				this.$.searchAjax.generateRequest();
 			}
@@ -148,8 +173,20 @@
 				this.$.detailDialog.open();
 			}
 
+			userDetail($event) {
+				this.userDetailData = $event.model.__data.item;
+				console.log(this.userDetailData);
+				window.open(this.userDetailData.html_url);
+			}
+
 			star() {
 				console.log(this.detailData);
+				this.$.starAjax.generateRequest();
+			}
+
+			handleStarredResponse() {
+				console.log(this.starData);
+				this.$.starredToast.open();
 			}
 		}
 
