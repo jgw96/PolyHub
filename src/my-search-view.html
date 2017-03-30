@@ -10,6 +10,9 @@
 <link rel="import" href="../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-search-view">
@@ -36,8 +39,9 @@
 			
 			paper-item {
 				margin-top: 10px;
+				background: white;
 			}
-
+			
 			.starIcon {
 				color: #FFEB3B;
 			}
@@ -62,7 +66,7 @@
 		<iron-list items="[[itemsToSearch]]" as="item">
 			<template>
 				<div>
-					<paper-item on-tap="goTo">
+					<paper-item on-tap="detail">
 						<iron-image style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.owner.avatar_url]]"></iron-image>
 						<paper-item-body two-line>
 							<div>[[item.full_name]]</div>
@@ -78,6 +82,22 @@
 		</iron-list>
 
 		<paper-fab icon="search" on-tap="search"></paper-fab>
+
+		<paper-dialog id="detailDialog">
+			<h2>[[detailData.full_name]]</h2>
+			<paper-dialog-scrollable>
+				<p>[[detailData.description]]</p>
+				<p>Forks: [[detailData.forks]]</p>
+				<p>Stars: [[detailData.stargazers_count]]</p>
+				<p>Watching: [[detailData.watchers_count]]</p>
+				<p>Open Issues: [[detailData.open_issues]]</p>
+				<p>Language: [[detailData.language]]</p>
+			</paper-dialog-scrollable>
+			<div class="buttons">
+				<paper-button dialog-dismiss>Cancel</paper-button>
+				<paper-button dialog-confirm autofocus on-tap="star">Star</paper-button>
+			</div>
+		</paper-dialog>
 
 	</template>
 
@@ -95,7 +115,8 @@
 						value: 1
 					},
 					selected: String,
-					searchTerm: String
+					searchTerm: String,
+					detailData: Object
 				}
 			}
 
@@ -117,9 +138,18 @@
 				this.$.searchAjax.generateRequest();
 			}
 
-			goTo($event) {
-				console.log($event);
-				window.open($event.model.__data.item.html_url);
+			goTo() {
+				window.open(this.detailData.html_url);
+			}
+
+			detail($event) {
+				this.detailData = $event.model.__data.item;
+				console.log(this.detailData);
+				this.$.detailDialog.open();
+			}
+
+			star() {
+				console.log(this.detailData);
 			}
 		}
 
