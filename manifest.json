@@ -3,16 +3,16 @@
   "short_name": "PolyHub",
   "start_url": "/?homescreen=1",
   "display": "standalone",
-  "theme_color": "#4CAF50",
-  "background_color": "#4CAF50",
+  "theme_color": "#607D8B",
+  "background_color": "#607D8B",
   "icons": [
     {
-      "src": "images/manifest/icon-192x192.png",
-      "sizes": "192x192",
+      "src": "images/256.png",
+      "sizes": "256x256",
       "type": "image/png"
     },
     {
-      "src": "images/manifest/icon-512x512.png",
+      "src": "images/512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

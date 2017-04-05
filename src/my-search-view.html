@@ -111,6 +111,7 @@
 			</paper-dialog-scrollable>
 			<div class="buttons">
 				<paper-button dialog-dismiss>Cancel</paper-button>
+				<paper-button dialog-confirm on-tap="visit">Visit</paper-button>
 				<paper-button dialog-confirm autofocus on-tap="star">Star</paper-button>
 			</div>
 		</paper-dialog>
@@ -187,6 +188,10 @@
 			handleStarredResponse() {
 				console.log(this.starData);
 				this.$.starredToast.open();
+			}
+
+			visit() {
+				window.open(this.detailData.html_url);
 			}
 		}
 

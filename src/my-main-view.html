@@ -207,6 +207,7 @@
 
 			issues($event) {
 				const repo = $event.model.__data.repo;
+				console.log(repo);
 				window.history.pushState({}, null, '/issues-view' + '?' + 'repo=' + repo.name + '&' + 'owner=' + repo.owner.login);
 				window.dispatchEvent(new CustomEvent('location-changed'));
 			}

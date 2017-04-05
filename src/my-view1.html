@@ -65,11 +65,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 			connectedCallback() {
 				super.connectedCallback();
+
+				idbKeyval.get('userData').then((value) => {
+					if (value !== undefined) {
+						window.history.pushState({}, null, '/main-view');
+						window.dispatchEvent(new CustomEvent('location-changed'));
+					}
+				})
 			}
 
 			login() {
 				const auth = this.$.auth;
-			  const github = new firebase.auth.GithubAuthProvider();
+				const github = new firebase.auth.GithubAuthProvider();
 				github.addScope('repo')
 				github.addScope('repo');
 				github.addScope('user');
@@ -81,8 +88,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 						requestIdleCallback(() => {
 							idbKeyval.set('userData', response.credential);
 
-							window.history.pushState({}, null, '/main-view');
-							window.dispatchEvent(new CustomEvent('location-changed'));
+							console.log(response);
+
+							const cred = new FederatedCredential({
+								id: response.credential.providerId,
+								provider: `https://${response.credential.provider}`,
+								name: response.user.displayName,
+								iconURL: response.user.photoURL
+							});
+							navigator.credentials.store(cred).then(() => {
+								console.log('stored');
+								window.history.pushState({}, null, '/main-view');
+								window.dispatchEvent(new CustomEvent('location-changed'));
+							});
 						});
 					})
 					.catch((err) => {

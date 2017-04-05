@@ -21,35 +21,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="my-icons.html">
+
+<link rel="preload" href="my-main-view.html">
 
 <dom-module id="my-app">
   <template>
     <style>
-      :host {
-        --app-primary-color: #4CAF50;
+       :host {
+        --app-primary-color: #607D8B;
         --app-secondary-color: black;
-
         display: block;
       }
-
+      
       app-drawer-layout:not([narrow]) [drawer-toggle] {
         display: none;
       }
-
+      
       app-header {
         color: #fff;
         background-color: var(--app-primary-color);
       }
-
+      
       app-header paper-icon-button {
         --paper-icon-button-ink-color: white;
       }
-
+      
       .drawer-list {
         margin: 0 20px;
       }
-
+      
       .drawer-list a {
         display: block;
         padding: 0 16px;
@@ -57,31 +59,41 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color: var(--app-secondary-color);
         line-height: 40px;
       }
-
+      
       .drawer-list a.iron-selected {
         color: black;
         font-weight: bold;
       }
+
+      a {
+        outline: none;
+      }
+
+      .menuToolbar {
+        background: var(--app-primary-color);
+        color: white;
+        height: 6rem;
+        align-items: flex-start;
+        padding-top: 1rem;
+      }
     </style>
 
     <app-location route="{{route}}"></app-location>
-    <app-route
-        route="{{route}}"
-        pattern="/:page"
-        data="{{routeData}}"
-        tail="{{subroute}}"></app-route>
+    <app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
 
     <app-drawer-layout fullbleed>
       <!-- Drawer content -->
       <app-drawer swipe-open id="drawer" slot="drawer">
-        <app-toolbar>Menu</app-toolbar>
-        <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
-          <a name="main-view" href="/main-view">My Repos</a>
-          <a name="view2" href="/view2">Favorites</a>
-					<a name="assigned-view" href="/assigned-view">Assigned Issues</a>
-					<a name="search-view" href="/search-view">Explore</a>
-          <a name="view3" href="/view3">My Profile</a>
-        </iron-selector>
+        <template is="dom-if" if="{{loggedIn}}">
+          <app-toolbar class="menuToolbar">Menu</app-toolbar>
+          <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+            <a name="main-view" href="/main-view">My Repos</a>
+            <a name="view2" href="/view2">Favorites</a>
+            <a name="assigned-view" href="/assigned-view">Assigned Issues</a>
+            <a name="search-view" href="/search-view">Explore</a>
+            <a name="view3" href="/view3">My Profile</a>
+          </iron-selector>
+        </template>
       </app-drawer>
 
       <!-- Main content -->
@@ -89,30 +101,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <app-header slot="header" condenses reveals effects="waterfall">
           <app-toolbar>
-						<template is="dom-if" if="{{loggedIn}}">
-							<paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
-						</template>
+            <template is="dom-if" if="{{loggedIn}}">
+              <paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
+            </template>
             <div main-title>PolyHub</div>
           </app-toolbar>
         </app-header>
 
-        <iron-pages
-            selected="[[page]]"
-            attr-for-selected="name"
-            fallback-selection="view404"
-            role="main">
+        <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="view404" role="main">
           <my-main-view name="main-view"></my-main-view>
-					<my-issues-view name="issues-view"></my-issues-view>
-					<my-detail-view name="detail-view"></my-detail-view>
-					<my-assigned-view name="assigned-view"></my-assigned-view>
-					<my-search-view name="search-view"></my-search-view>
-					<my-view1 name="view1"></my-view1>
+          <my-issues-view name="issues-view"></my-issues-view>
+          <my-detail-view name="detail-view"></my-detail-view>
+          <my-assigned-view name="assigned-view"></my-assigned-view>
+          <my-search-view name="search-view"></my-search-view>
+          <my-view1 name="view1"></my-view1>
           <my-view2 name="view2"></my-view2>
           <my-view3 name="view3"></my-view3>
           <my-view404 name="view404"></my-view404>
         </iron-pages>
+
+        <paper-toast id="networkToast" text="You are offline"></paper-toast>
       </app-header-layout>
     </app-drawer-layout>
+
   </template>
 
   <script>
@@ -127,7 +138,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             reflectToAttribute: true,
             observer: '_pageChanged',
           },
-					loggedIn: Boolean
+          loggedIn: Boolean
         };
       }
 
@@ -137,6 +148,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         ];
       }
 
+      constructor() {
+        super();
+        this.removeAttribute('unresolved');
+      }
+
+      async connectedCallback() {
+        super.connectedCallback();
+
+        window.addEventListener('offline', () => {
+          this.$.networkToast.open();
+        });
+
+        const userData = await idbKeyval.get('userData');
+        console.log(userData);
+
+        if (userData === undefined) {
+          this.loggedIn = false;
+        } else {
+          this.loggedIn = true;
+        }
+      }
+
       _routePageChanged(page) {
         // Polymer 2.0 will call with `undefined` on initialization.
         // Ignore until we are properly called with a string.
@@ -144,11 +177,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           return;
         }
 
-				if(page === 'view1') {
-					this.loggedIn = false;
-				} else {
-					this.loggedIn = true;
-				}
+        if (page === 'view1') {
+          this.loggedIn = false;
+        } else {
+          this.loggedIn = true;
+        }
 
         // If no page was found in the route data, page will be an empty string.
         // Deault to 'view1' in that case.
@@ -164,10 +197,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // Load page import on demand. Show 404 page if fails
         var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
         Polymer.importHref(
-            resolvedPageUrl,
-            null,
-            this._showPage404.bind(this),
-            true);
+          resolvedPageUrl,
+          null,
+          this._showPage404.bind(this),
+          true);
       }
 
       _showPage404() {
