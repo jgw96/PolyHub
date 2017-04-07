@@ -32,7 +32,8 @@
     "paper-item": "PolymerElements/paper-item#2.0-preview",
     "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#2.0-preview",
     "paper-listbox": "PolymerElements/paper-listbox#2.0-preview",
-    "paper-dialog-scrollable": "PolymerElements/paper-dialog-scrollable#2.0-preview"
+    "paper-dialog-scrollable": "PolymerElements/paper-dialog-scrollable#2.0-preview",
+    "app-storage": "PolymerElements/app-storage#2.0-preview"
   },
   "resolutions": {
     "polymer": "^2.0.0-rc.1"

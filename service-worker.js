@@ -13,3 +13,18 @@
 console.info(
   'Service worker disabled for development, will be generated at build time.'
 );
+
+
+self.addEventListener('sync', function(event) {
+  if (event.tag == 'starSync') {
+    event.waitUntil(() => {
+      idbKeyval.get('badRequest').then((value) => {
+        fetch(value, {
+          method: 'PUT'
+        })
+      }).then((response) => {
+        console.log(response);
+      })
+    });
+  }
+});

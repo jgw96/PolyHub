@@ -17,5 +17,13 @@ module.exports = {
     '/bower_components/webcomponentsjs/*',
   ],
   navigateFallback: 'index.html',
-  navigateFallbackWhitelist: [/^\/[^\_]+\/?/]
+  navigateFallbackWhitelist: [/^\/[^\_]+\/?/],
+  runtimeCaching: [{
+    urlPattern: /^https:\/\/api.github\.com/,
+    handler: 'networkFirst'
+  },
+  {
+    urlPattern: /^https:\/\/fonts.googleapis\.com/,
+    handler: 'cacheFirst'
+  }]
 };

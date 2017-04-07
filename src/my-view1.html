@@ -13,6 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
 <link rel="import" href="shared-styles.html">
 
@@ -51,6 +52,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			<h1>TLDR Github but faster!</h1>
 			<paper-button raised on-tap="login">Login with Github</paper-button>
 		</div>
+
+		<paper-toast id="loggedInToast" text="Logging in..."></paper-toast>
 	</template>
 
 	<script>
@@ -68,8 +71,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 				idbKeyval.get('userData').then((value) => {
 					if (value !== undefined) {
-						window.history.pushState({}, null, '/main-view');
-						window.dispatchEvent(new CustomEvent('location-changed'));
+						this.$.loggedInToast.open();
+
+						setTimeout(() => {
+							window.history.pushState({}, null, '/main-view');
+						  window.dispatchEvent(new CustomEvent('location-changed'));
+						}, 2000);
 					}
 				})
 			}
@@ -87,6 +94,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 						requestIdleCallback(() => {
 							idbKeyval.set('userData', response.credential);
+							idbKeyval.set('userInfo', response.user.uid);
 
 							console.log(response);
 

@@ -47,11 +47,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			.card-actions paper-button {
 				font-size: 15px;
 			}
-
+			
 			h1 {
 				color: var(--app-primary-color);
 			}
-
+			
 			.noRepos {
 				color: black;
 				text-align: center;
@@ -93,22 +93,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	<script>
 		class MyView2 extends Polymer.Element {
 			static get is() { return 'my-view2'; }
-
 			static get properties() {
 				return {
 					repos: Array,
 					noRepos: Boolean
 				}
 			}
-
 			constructor() {
 				super();
 				console.log('hello world');
 			}
-
 			async connectedCallback() {
 				super.connectedCallback();
-        
+
 				this.repos = await idbKeyval.get('favorites');
 				if (this.repos === undefined) {
 					this.noRepos = true;
@@ -116,37 +113,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 					this.noRepos = false;
 				}
 			}
-
 			issues($event) {
 				const repo = $event.model.__data.repo;
-
 				window.history.pushState({}, null, '/issues-view' + '?' + 'repo=' + repo.name + '&' + 'owner=' + repo.owner.login);
-        window.dispatchEvent(new CustomEvent('location-changed'));
+				window.dispatchEvent(new CustomEvent('location-changed'));
 			}
-
 			async delete($event) {
 				const repo = $event.model.__data.repo;
-
 				const index = this.repos.findIndex((element) => {
 					return element.name === repo.name;
 				});
-
 				this.splice('repos', index, 1);
 				await idbKeyval.set('favorites', this.repos);
-
 				navigator.vibrate(300);
-
 				if (this.repos.length === 0) {
 					await idbKeyval.delete('favorites');
 					this.noRepos = true;
 				}
-
 				requestIdleCallback(() => {
 					this.$.deleteToast.open();
 				});
 			}
 		}
-
 		window.customElements.define(MyView2.is, MyView2);
 	</script>
 </dom-module>

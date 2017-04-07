@@ -140,7 +140,8 @@
 					favorites: Array,
 					searchTerm: String,
 					originalRepoData: Array,
-					loading: Boolean
+					loading: Boolean,
+					userId: String
 				};
 			}
 
@@ -154,7 +155,10 @@
 					} else {
 						this.favorites = [];
 					}
+					console.log(this.favorites);
 				});
+
+				console.log(this.favorites);
 			}
 
 			async connectedCallback() {
@@ -166,6 +170,9 @@
 				requestIdleCallback(() => {
 					this.$.reposAjax.generateRequest();
 				});
+
+				const userInfo = await idbKeyval.get('userInfo');
+				this.userId = userInfo;
 			}
 
 			handleReposResponse() {
@@ -185,6 +192,8 @@
 
 			async favorite($event) {
 				this.push('favorites', $event.model.__data.repo);
+
+				console.log(this.favorites);
 
 				try {
 					await idbKeyval.set('favorites', this.favorites);
@@ -207,7 +216,7 @@
 
 			issues($event) {
 				const repo = $event.model.__data.repo;
-				console.log(repo);
+
 				window.history.pushState({}, null, '/issues-view' + '?' + 'repo=' + repo.name + '&' + 'owner=' + repo.owner.login);
 				window.dispatchEvent(new CustomEvent('location-changed'));
 			}

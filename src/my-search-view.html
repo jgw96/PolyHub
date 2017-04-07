@@ -146,6 +146,13 @@
 
 				const userData = await idbKeyval.get('userData');
 				this.token = userData.accessToken;
+
+				this.$.starAjax.addEventListener('error', () => {
+					navigator.serviceWorker.ready.then((swRegistration) => {
+						idbKeyval.set('badRequest', this.$.starAjax.requestUrl);
+						return swRegistration.sync.register('starSync');
+					});
+				});
 			}
 
 			handleSearchResponse() {
