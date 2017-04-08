@@ -47,6 +47,18 @@
 			.starIcon {
 				color: #FFEB3B;
 			}
+			
+			.followButton {
+				color: var(--app-primary-color);
+				font-size: 95;
+				font-size: 95%;
+				float: right;
+			}
+
+			.userActions {
+				position: absolute;
+                right: 5px;
+			}
 		</style>
 
 		<iron-ajax id="searchAjax" url="https://api.github.com/search/[[selected]]?q=[[searchTerm]]&access_token={{token}}&page={{page}}"
@@ -54,6 +66,10 @@
 
 		<iron-ajax id="starAjax" url="https://api.github.com/user/starred/[[detailData.owner.login]]/[[detailData.name]]?access_token={{token}}"
 		 handle-as="json" method="PUT" on-response="handleStarredResponse" last-response="{{starData}}"></iron-ajax>
+
+		<iron-ajax id="followAjax" url="https://api.github.com/user/following/[[userName]]?access_token={{token}}" handle-as="json"
+		 method="PUT" on-response="handleFollowResponse" last-response="{{followData}}">
+		</iron-ajax>
 
 		<paper-card heading="Search">
 			<div class="card-content">
@@ -86,10 +102,14 @@
 					</template>
 
 					<template is="dom-if" if="{{usersSelected}}">
-						<paper-item on-tap="userDetail">
-							<iron-image style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.avatar_url]]"></iron-image>
+						<paper-item>
+							<iron-image on-tap="userDetail" style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.avatar_url]]"></iron-image>
 							<paper-item-body two-line>
-								<div>[[item.login]]</div>
+								<div on-tap="userDetail">[[item.login]]</div>
+
+								<div class="userActions">
+									<paper-button class="followButton" on-tap="follow">Follow</paper-button>
+								</div>
 							</paper-item-body>
 						</paper-item>
 					</template>
@@ -117,6 +137,7 @@
 		</paper-dialog>
 
 		<paper-toast id="starredToast" text="Repo starred"></paper-toast>
+		<paper-toast id="followToast" text="User followed"></paper-toast>
 
 	</template>
 
@@ -137,7 +158,8 @@
 					searchTerm: String,
 					detailData: Object,
 					starData: Object,
-					usersSelected: Boolean
+					usersSelected: Boolean,
+					userName: String
 				}
 			}
 
@@ -151,6 +173,13 @@
 					navigator.serviceWorker.ready.then((swRegistration) => {
 						idbKeyval.set('badRequest', this.$.starAjax.requestUrl);
 						return swRegistration.sync.register('starSync');
+					});
+				});
+
+				this.$.followAjax.addEventListener('error', () => {
+					navigator.serviceWorker.ready.then((swRegistration) => {
+						idbKeyval.set('badFollowRequest', this.$.followAjax.requestUrl);
+						return swRegistration.sync.register('followSync');
 					});
 				});
 			}
@@ -192,9 +221,20 @@
 				this.$.starAjax.generateRequest();
 			}
 
+			follow($event) {
+				console.log($event.model.__data);
+				this.userName = $event.model.__data.item.login;
+				this.$.followAjax.generateRequest();
+			}
+
 			handleStarredResponse() {
 				console.log(this.starData);
 				this.$.starredToast.open();
+			}
+
+			handleFollowResponse() {
+				console.log(this.followData);
+				this.$.followToast.open();
 			}
 
 			visit() {
