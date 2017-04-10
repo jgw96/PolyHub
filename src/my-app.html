@@ -18,6 +18,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
 <link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
@@ -77,6 +78,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         padding-top: 1rem;
       }
     </style>
+
+    <firebase-app name="myApp" messaging-sender-id="701882251983" auth-domain="polyhub-28ed3.firebaseapp.com" database-url="https://polyhub-28ed3.firebaseio.com" api-key="AIzaSyDMZFvR53ivGYp_1AJ_6VszraC0k_z-uiw">
+		</firebase-app>
 
     <app-location route="{{route}}"></app-location>
     <app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>

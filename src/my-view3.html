@@ -7,11 +7,14 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
-
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/social-icons.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-messaging.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view3">
@@ -27,13 +30,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				flex-direction: column;
 				align-items: center;
 			}
+			
+			paper-fab {
+				position: fixed;
+				bottom: 16px;
+				right: 16px;
+			}
 		</style>
 
 		<iron-ajax id="userAjax" url="https://api.github.com/user?access_token={{token}}" handle-as="json" on-response="handleResponse"
 		 last-response="{{userData}}"></iron-ajax>
 
+		<firebase-messaging app-name="myApp" id="messaging" token="{{notifyToken}}" on-message="handleMessage">
+		</firebase-messaging>
+
 		<main>
-			<iron-image style="width:200px; height:200px; background: grey; border-radius: 50%;" sizing="cover" preload src="{{userImage}}"></iron-image>
+			<iron-image style="width:200px; height:200px; background: grey; border-radius: 50%;" sizing="cover" preload="" src="{{userImage}}"></iron-image>
 			<h1>[[userData.name]]</h1>
 		</main>
 
@@ -49,6 +61,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		<p>
 			Public repos: [[userData.public_repos]]
 		</p>
+
+		<paper-fab icon="social:notifications" on-tap="notify"></paper-fab>
 	</template>
 
 	<script>
@@ -59,7 +73,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				return {
 					userData: Object,
 					token: String,
-					userImage: String
+					userImage: String,
+					notifyToken: String
 				};
 			}
 
@@ -73,6 +88,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 			handleResponse() {
 				this.userImage = this.userData.avatar_url;
+			}
+
+			handleMessage() {
+
+			}
+
+			handleNotifyResponse() {
+				console.log(this.notifyData);
+			}
+
+			notify() {
+				this.$.messaging.requestPermission().then((token) => {
+					// permission was granted
+
+					setTimeout(() => {
+						console.log(this.notifyToken);
+						fetch('http://localhost:8080/token', {
+							method: 'POST',
+							body: JSON.stringify({
+								token: this.notifyToken
+							}),
+							headers: new Headers({
+								'Content-Type': 'application/json'
+							}),
+							mode: 'cors'
+						});
+					}, 3000);
+				}, (err) => {
+					// permission was denied
+					console.log(err);
+				});
 			}
 		}
 

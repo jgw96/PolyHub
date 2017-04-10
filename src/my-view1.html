@@ -9,7 +9,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
@@ -42,9 +41,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			}
 		</style>
 
-		<firebase-app auth-domain="polyhub-28ed3.firebaseapp.com" database-url="https://polyhub-28ed3.firebaseio.com" api-key="AIzaSyDMZFvR53ivGYp_1AJ_6VszraC0k_z-uiw">
-		</firebase-app>
-		<firebase-auth id="auth" user="{{user}}">
+		<firebase-auth app-name="myApp" id="auth" user="{{user}}">
 		</firebase-auth>
 
 		<div class="card">
