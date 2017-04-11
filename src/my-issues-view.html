@@ -8,6 +8,10 @@
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/social-icons.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 
 <dom-module id="my-issues-view">
 	<template>
@@ -33,6 +37,12 @@
 			paper-item {
 				margin-top: 10px;
 			}
+
+			paper-fab {
+				position: fixed;
+				bottom: 16px;
+				right: 16px;
+			}
 			
 			.noIssues {
 				color: black;
@@ -45,7 +55,6 @@
 
 		<iron-ajax id="issuesAjax" url="https://api.github.com/repos/[[subroute.__queryParams.owner]]/[[subroute.__queryParams.repo]]/issues?access_token={{token}}"
 		 handle-as="json" on-response="handleIssuesResponse" last-response="{{issueData}}"></iron-ajax>
-
 
 		<iron-list items="[[issueData]]" as="issue">
 			<template>
@@ -67,9 +76,13 @@
 			</template>
 		</iron-list>
 
+		<paper-fab icon="social:notifications" on-tap="notify"></paper-fab>
+
 		<template is="dom-if" if="{{noIssues}}">
 			<h1 class="noIssues">No issues for this repo</h1>
 		</template>
+
+		<paper-toast id="yesNotify" text="Notifications Enabled"></paper-toast>
 	</template>
 
 	<script>
@@ -82,7 +95,8 @@
 					token: String,
 					issueData: Array,
 					routeData: Object,
-					noIssues: Boolean
+					noIssues: Boolean,
+					notifyToken: String
 				}
 			}
 
@@ -112,6 +126,25 @@
 				const issue = $event.model.__data.issue;
 				window.history.pushState({}, null, '/detail-view' + '?' + 'owner=' + this.subroute.__queryParams.owner + '&' + 'repo=' + this.subroute.__queryParams.repo + '&' + 'number=' + issue.number);
 				window.dispatchEvent(new CustomEvent('location-changed'));
+			}
+
+			async notify() {
+				const notifyToken = await idbKeyval.get('notifyToken');
+
+				fetch('http://localhost:8080/issues', {
+					method: 'POST',
+					body: JSON.stringify({
+						token: notifyToken,
+						owner: this.subroute.__queryParams.owner,
+						repo: this.subroute.__queryParams.repo
+					}),
+					headers: new Headers({
+						'Content-Type': 'application/json'
+					}),
+					mode: 'cors'
+				});
+
+				this.$.yesNotify.open();
 			}
 		}
 
