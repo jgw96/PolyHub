@@ -20,10 +20,10 @@ module.exports = {
   navigateFallbackWhitelist: [/^\/[^\_]+\/?/],
   runtimeCaching: [{
     urlPattern: /^https:\/\/api.github\.com/,
-    handler: 'networkFirst'
+    handler: 'networkFirst',
   },
   {
     urlPattern: /^https:\/\/fonts.googleapis\.com/,
-    handler: 'cacheFirst'
-  }]
+    handler: 'cacheFirst',
+  }],
 };

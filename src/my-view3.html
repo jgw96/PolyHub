@@ -13,6 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/iron-icons/social-icons.html">
 <link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-messaging.html">
 <link rel="import" href="shared-styles.html">
@@ -62,7 +63,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			Public repos: [[userData.public_repos]]
 		</p>
 
-		<paper-fab icon="social:notifications" on-tap="notify"></paper-fab>
+		<paper-fab icon="[[notifyIcon]]" on-tap="notify"></paper-fab>
+
+		<paper-toast id="yesNotify" text="Notifications Enabled"></paper-toast>
+		<paper-toast id="noNotify" text="Notifications Blocked"></paper-toast>
+
 	</template>
 
 	<script>
@@ -74,12 +79,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 					userData: Object,
 					token: String,
 					userImage: String,
-					notifyToken: String
+					notifyToken: String,
+					notifyIcon: {
+						value: 'social:notifications-none',
+						type: String
+					}
 				};
 			}
 
 			async connectedCallback() {
 				super.connectedCallback();
+				const notifyStatus = await idbKeyval.get('notifications');
+				if (notifyStatus !== undefined) {
+					console.log(notifyStatus);
+					this.notifyIcon = notifyStatus;
+				}
+
 				const userData = await idbKeyval.get('userData');
 				this.token = userData.accessToken;
 
@@ -101,6 +116,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			notify() {
 				this.$.messaging.requestPermission().then((token) => {
 					// permission was granted
+					this.notifyIcon = 'social:notifications-active';
+					idbKeyval.set('notifications', this.notifyIcon);
+
+					this.$.yesNotify.open();
 
 					setTimeout(() => {
 						console.log(this.notifyToken);
@@ -117,6 +136,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 					}, 3000);
 				}, (err) => {
 					// permission was denied
+
+					this.$.noNotify.open();
+					
+					this.notifyIcon = 'social:notifications-off'
+					idbKeyval.set('notifications', this.notifyIcon);
+
 					console.log(err);
 				});
 			}
