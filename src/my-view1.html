@@ -72,7 +72,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 						setTimeout(() => {
 							window.history.pushState({}, null, '/main-view');
-						  window.dispatchEvent(new CustomEvent('location-changed'));
+							window.dispatchEvent(new CustomEvent('location-changed'));
 						}, 2000);
 					}
 				})
@@ -96,17 +96,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 							console.log(response);
 
-							const cred = new FederatedCredential({
-								id: response.credential.providerId,
-								provider: `https://${response.credential.provider}`,
-								name: response.user.displayName,
-								iconURL: response.user.photoURL
-							});
-							navigator.credentials.store(cred).then(() => {
-								console.log('stored');
+							if (navigator.credentials) {
+								const cred = new FederatedCredential({
+									id: response.credential.providerId,
+									provider: `https://${response.credential.provider}`,
+									name: response.user.displayName,
+									iconURL: response.user.photoURL
+								});
+								navigator.credentials.store(cred).then(() => {
+									console.log('stored');
+									window.history.pushState({}, null, '/main-view');
+									window.dispatchEvent(new CustomEvent('location-changed'));
+								});
+							} else {
 								window.history.pushState({}, null, '/main-view');
 								window.dispatchEvent(new CustomEvent('location-changed'));
-							});
+							}
 						});
 					})
 					.catch((err) => {

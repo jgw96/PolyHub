@@ -1,6 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
-<link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
@@ -12,6 +11,8 @@
 <link rel="import" href="../bower_components/iron-icons/social-icons.html">
 <link rel="import" href="../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
 <dom-module id="my-issues-view">
 	<template>
@@ -37,23 +38,32 @@
 			paper-item {
 				margin-top: 10px;
 			}
-
+			
 			paper-fab {
 				position: fixed;
 				bottom: 16px;
 				right: 16px;
 			}
 			
+			paper-button {
+				color: var(--app-primary-color);
+			}
+			
 			.noIssues {
 				color: black;
 				text-align: center;
+			}
+			
+			.bottomBar {
+				display: flex;
+				justify-content: flex-start;
 			}
 		</style>
 
 		<app-location route="{{route}}"></app-location>
 		<app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
 
-		<iron-ajax id="issuesAjax" url="https://api.github.com/repos/[[subroute.__queryParams.owner]]/[[subroute.__queryParams.repo]]/issues?access_token={{token}}"
+		<iron-ajax id="issuesAjax" url="https://api.github.com/repos/[[subroute.__queryParams.owner]]/[[subroute.__queryParams.repo]]/issues?access_token={{token}}&page={{page}}"
 		 handle-as="json" on-response="handleIssuesResponse" last-response="{{issueData}}"></iron-ajax>
 
 		<iron-list items="[[issueData]]" as="issue">
@@ -76,11 +86,15 @@
 			</template>
 		</iron-list>
 
-		<paper-fab icon="social:notifications" on-tap="notify"></paper-fab>
-
 		<template is="dom-if" if="{{noIssues}}">
 			<h1 class="noIssues">No issues for this repo</h1>
 		</template>
+
+		<div class="bottomBar">
+			<paper-button on-tap="prevPage">Previous</paper-button>
+			<paper-button class="nextButton" on-tap="nextPage">Next</paper-button>
+			<paper-icon-button class="refreshButton" icon="refresh" on-tap="refresh"></paper-icon-button>
+		</div>
 
 		<paper-toast id="yesNotify" text="Notifications Enabled"></paper-toast>
 	</template>
@@ -94,15 +108,29 @@
 					subroute: String,
 					token: String,
 					issueData: Array,
-					routeData: Object,
+					routeData: {
+						type: Object,
+						observer: 'dataChanged'
+					},
 					noIssues: Boolean,
-					notifyToken: String
+					notifyToken: String,
+					page: {
+						type: Number,
+						value: 1
+					},
 				}
 			}
 
 			async connectedCallback() {
 				super.connectedCallback();
 
+				const userData = await idbKeyval.get('userData');
+				this.token = userData.accessToken;
+
+				this.$.issuesAjax.generateRequest();
+			}
+
+			async dataChanged() {
 				const userData = await idbKeyval.get('userData');
 				this.token = userData.accessToken;
 
@@ -145,6 +173,16 @@
 				});
 
 				this.$.yesNotify.open();
+			}
+
+			nextPage() {
+				this.page = ++this.page;
+				this.$.issuesAjax.generateRequest();
+			}
+
+			prevPage() {
+				this.page = --this.page;
+				this.$.issuesAjax.generateRequest();
 			}
 		}
 

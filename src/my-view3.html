@@ -39,8 +39,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			}
 		</style>
 
-		<iron-ajax id="userAjax" url="https://api.github.com/user?access_token={{token}}" handle-as="json" on-response="handleResponse"
-		 last-response="{{userData}}"></iron-ajax>
+		<iron-ajax id="userAjax" url="https://api.github.com/user?access_token={{token}}" handle-as="json" on-response="handleResponse" last-response="{{userData}}"></iron-ajax>
 
 		<firebase-messaging app-name="myApp" id="messaging" token="{{notifyToken}}" on-message="handleMessage">
 		</firebase-messaging>
@@ -62,8 +61,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		<p>
 			Public repos: [[userData.public_repos]]
 		</p>
-
-		<paper-fab icon="[[notifyIcon]]" on-tap="notify"></paper-fab>
 
 		<paper-toast id="yesNotify" text="Notifications Enabled"></paper-toast>
 		<paper-toast id="noNotify" text="Notifications Blocked"></paper-toast>
@@ -106,7 +103,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			}
 
 			handleMessage() {
-
+				console.log('called');
 			}
 
 			handleNotifyResponse() {
@@ -114,7 +111,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			}
 
 			notify() {
-				this.$.messaging.requestPermission().then((token) => {
+				this.$.messaging.requestPermission().then(() => {
 					// permission was granted
 					this.notifyIcon = 'social:notifications-active';
 					idbKeyval.set('notifications', this.notifyIcon);

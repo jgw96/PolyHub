@@ -11,6 +11,8 @@
 <link rel="import" href="../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
@@ -23,6 +25,13 @@
 			:host {
 				display: block;
 				padding: 10px;
+			}
+
+			@media(min-width: 850px) {
+				.content {
+					margin-left: 15%;
+					margin-right: 15%;
+				}
 			}
 			
 			paper-dropdown-menu {
@@ -54,10 +63,10 @@
 				font-size: 95%;
 				float: right;
 			}
-
+			
 			.userActions {
 				position: absolute;
-                right: 5px;
+				right: 5px;
 			}
 		</style>
 
@@ -71,55 +80,59 @@
 		 method="PUT" on-response="handleFollowResponse" last-response="{{followData}}">
 		</iron-ajax>
 
-		<paper-card heading="Search">
-			<div class="card-content">
-				<paper-dropdown-menu label="What to search" selected-item-label="{{selected}}">
-					<paper-listbox class="dropdown-content">
-						<paper-item label="repositories">Repositories</paper-item>
-						<paper-item label="users">Users</paper-item>
-					</paper-listbox>
-				</paper-dropdown-menu>
+		<div class="content">
 
-				<paper-input label="Search query" value="{{searchTerm}}"></paper-input>
-			</div>
-		</paper-card>
+			<paper-card heading="Search">
+				<div class="card-content">
+					<paper-dropdown-menu label="What to search" selected-item-label="{{selected}}">
+						<paper-listbox slot="dropdown-content" class="dropdown-content">
+							<paper-item label="repositories">Repositories</paper-item>
+							<paper-item label="users">Users</paper-item>
+						</paper-listbox>
+					</paper-dropdown-menu>
 
-		<iron-list items="[[itemsToSearch]]" as="item">
-			<template>
-				<div>
-					<template is="dom-if" if="{{!usersSelected}}">
-						<paper-item on-tap="detail">
-							<iron-image style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.owner.avatar_url]]"></iron-image>
-							<paper-item-body two-line>
-								<div>[[item.full_name]]</div>
-								<div secondary>[[item.description]]</div>
-
-								<div>
-									<iron-icon class="starIcon" icon="star"></iron-icon> <span>[[item.stargazers_count]]</span>
-								</div>
-							</paper-item-body>
-						</paper-item>
-					</template>
-
-					<template is="dom-if" if="{{usersSelected}}">
-						<paper-item>
-							<iron-image on-tap="userDetail" style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.avatar_url]]"></iron-image>
-							<paper-item-body two-line>
-								<div on-tap="userDetail">[[item.login]]</div>
-
-								<div class="userActions">
-									<paper-button class="followButton" on-tap="follow">Follow</paper-button>
-								</div>
-							</paper-item-body>
-						</paper-item>
-					</template>
+					<paper-input label="Search query" value="{{searchTerm}}"></paper-input>
 				</div>
-			</template>
-		</iron-list>
+			</paper-card>
+
+			<iron-list items="[[itemsToSearch]]" as="item">
+				<template>
+					<div>
+						<template is="dom-if" if="{{!usersSelected}}">
+							<paper-item on-tap="detail">
+								<iron-image style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.owner.avatar_url]]"></iron-image>
+								<paper-item-body two-line>
+									<div>[[item.full_name]]</div>
+									<div secondary>[[item.description]]</div>
+
+									<div>
+										<iron-icon class="starIcon" icon="star"></iron-icon> <span>[[item.stargazers_count]]</span>
+									</div>
+								</paper-item-body>
+							</paper-item>
+						</template>
+
+						<template is="dom-if" if="{{usersSelected}}">
+							<paper-item>
+								<iron-image on-tap="userDetail" style="width: 60px; height: 60px; border-radius: 50%;" sizing="cover" preload src="[[item.avatar_url]]"></iron-image>
+								<paper-item-body two-line>
+									<div on-tap="userDetail">[[item.login]]</div>
+
+									<div class="userActions">
+										<paper-button class="followButton" on-tap="follow">Follow</paper-button>
+									</div>
+								</paper-item-body>
+							</paper-item>
+						</template>
+					</div>
+				</template>
+			</iron-list>
+
+		</div>
 
 		<paper-fab icon="search" on-tap="search"></paper-fab>
 
-		<paper-dialog id="detailDialog">
+		<paper-dialog id="detailDialog" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<h2>[[detailData.full_name]]</h2>
 			<paper-dialog-scrollable>
 				<p>[[detailData.description]]</p>
@@ -138,6 +151,7 @@
 
 		<paper-toast id="starredToast" text="Repo starred"></paper-toast>
 		<paper-toast id="followToast" text="User followed"></paper-toast>
+		<paper-toast id="badRequest" text="Your action will be done once online"></paper-toast>
 
 	</template>
 
@@ -175,6 +189,8 @@
 						idbKeyval.set('badRequest', this.$.starAjax.requestUrl);
 						return swRegistration.sync.register('starSync');
 					});
+
+					this.$.badRequest.open();
 				});
 
 				this.$.followAjax.addEventListener('error', () => {
@@ -182,6 +198,8 @@
 						idbKeyval.set('badFollowRequest', this.$.followAjax.requestUrl);
 						return swRegistration.sync.register('followSync');
 					});
+
+					this.$.badRequest.open();
 				});
 			}
 

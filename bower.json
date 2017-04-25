@@ -15,7 +15,7 @@
     "iron-pages": "PolymerElements/iron-pages#2.0-preview",
     "iron-selector": "PolymerElements/iron-selector#2.0-preview",
     "paper-icon-button": "PolymerElements/paper-icon-button#2.0-preview",
-    "polymer": "Polymer/polymer#^2.0.0-rc.1",
+    "polymer": "Polymer/polymer#^2.0.0-rc.7",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0-rc.4",
     "polymerfire": "firebase/polymerfire#2.0-preview",
     "paper-button": "PolymerElements/paper-button#2.0-preview",
@@ -33,10 +33,14 @@
     "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#2.0-preview",
     "paper-listbox": "PolymerElements/paper-listbox#2.0-preview",
     "paper-dialog-scrollable": "PolymerElements/paper-dialog-scrollable#2.0-preview",
-    "app-storage": "PolymerElements/app-storage#2.0-preview"
+    "app-storage": "PolymerElements/app-storage#2.0-preview",
+    "web-animations-js": "web-animations/web-animations-js#2.2.2",
+    "marked-element": "PolymerElements/marked-element#2.0-preview"
   },
   "resolutions": {
-    "polymer": "^2.0.0-rc.1"
+    "polymer": "^2.0.0-rc.7",
+    "webcomponentsjs": "^v1.0.0-rc.5",
+    "marked-element": "2.0-preview"
   },
   "devDependencies": {
     "web-component-tester": "6.0.0-prerelease.5"

@@ -2,9 +2,21 @@
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/marked-element/marked-element.html">
 <link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-detail-view">
@@ -21,7 +33,7 @@
 				align-items: center;
 			}
 			
-			h2 {
+			.detailDataHeader {
 				-webkit-margin-before: 0;
 				-webkit-margin-after: 0;
 				font-size: 1em;
@@ -30,13 +42,42 @@
 			main {
 				margin-top: 40px;
 			}
-
+			
+			paper-item-body {
+				margin-left: 15px;
+			}
+			
+			paper-item {
+				margin-top: 10px;
+				background: white;
+				padding-bottom: 10px;
+			}
+			
 			paper-fab {
 				position: fixed;
-				bottom: 16px;
 				right: 16px;
+				bottom: 16px;
+			}
+			
+			paper-textarea {
+				width: 11em;
+			}
+			
+			paper-dialog-scrollable {
+				height: 8em;
+				overflow: scroll;
+			}
+			
+			.commentBody {
+				white-space: normal;
+			}
+			
+			.commentsHeader {
+				margin-top: 60px;
 			}
 		</style>
+
+		<h1>hello world</h1>
 
 		<app-location route="{{route}}"></app-location>
 		<app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
@@ -44,17 +85,56 @@
 		<iron-ajax id="detailAjax" url="https://api.github.com/repos/[[subroute.__queryParams.owner]]/[[subroute.__queryParams.repo]]/issues/[[subroute.__queryParams.number]]?access_token=[[token]]"
 		 handle-as="json" on-response="handleDetailResponse" last-response="{{detailData}}"></iron-ajax>
 
-			<div class="topBlock">
-				<h1>[[detailData.title]]</h1>
-				<h2>Opened by [[detailData.user.login]] on [[goodDate]]</h2>
-				<iron-image style="width:100px; height:100px; border-radius: 50%; background-color: lightgray;" sizing="cover" preload src="[[detailData.user.avatar_url]]"></iron-image>
+		<iron-ajax id="commentsAjax" url="[[detailData.comments_url]]?access_token=[[token]]" handle-as="json" on-response="handleCommentsResponse"
+		 last-response="{{commentsData}}"></iron-ajax>
+
+		<div class="topBlock">
+			<h1>[[detailData.title]]</h1>
+			<h2 class="detailDataHeader">Opened by [[detailData.user.login]] on [[goodDate]]</h2>
+			<iron-image style="width:100px; height:100px; border-radius: 50%; background-color: lightgray;" sizing="cover" preload src="[[detailData.user.avatar_url]]"></iron-image>
+		</div>
+
+		<main>
+			<marked-element markdown="[[detailData.body]]">
+				<div class="markdown-html"></div>
+			</marked-element>
+		</main>
+
+		<template is="dom-if" if="{{!noComments}}">
+			<h1 class="commentsHeader">Comments</h1>
+			<div class="commentsList">
+				<iron-list items="[[commentsData]]" as="comment">
+					<template>
+						<div>
+							<paper-item>
+								<iron-image style="width: 60px; height: 60px; border-radius: 50%; background-color: lightgray;" sizing="cover" preload src="[[comment.user.avatar_url]]"></iron-image>
+								<paper-item-body two-line>
+									<marked-element class="commentBody" markdown="[[comment.body]]">
+										<div class="markdown-html"></div>
+									</marked-element>
+									<div secondary>[[comment.created_at]] by [[comment.user.login]]</div>
+								</paper-item-body>
+							</paper-item>
+						</div>
+					</template>
+				</iron-list>
 			</div>
+		</template>
 
-			<main>
-				<p>[[detailData.body]]</p>
-			</main>
+		<paper-dialog id="respondDialog" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<h2>New Comment</h2>
+			<paper-dialog-scrollable>
+				<paper-textarea label="Comment" value="{{myComment}}"></paper-textarea>
+			</paper-dialog-scrollable>
+			<div class="buttons">
+				<paper-button dialog-dismiss>Cancel</paper-button>
+				<paper-button dialog-confirm autofocus on-tap="commentConfirm">Comment</paper-button>
+			</div>
+		</paper-dialog>
 
-			<paper-fab on-tap="visit" icon="link"></paper-fab>
+		<paper-fab on-tap="openRespondDialog" icon="reply"></paper-fab>
+
+		<paper-toast id="commentToast" text="Comment Posted"></paper-toast>
 
 	</template>
 
@@ -65,10 +145,19 @@
 			static get properties() {
 				return {
 					detailData: Object,
-					routeData: Object,
+					routeData: {
+						type: Object,
+						observer: 'dataChanged'
+					},
 					labelData: Object,
 					token: String,
-					goodDate: Date
+					goodDate: Date,
+					commentsData: Object,
+					myComment: String,
+					responseData: Object,
+					noComments: {
+						type: Boolean
+					}
 				}
 			}
 
@@ -79,21 +168,69 @@
 				this.token = userData.accessToken;
 
 				this.$.detailAjax.generateRequest();
+
+				this.$.respondAjax.addEventListener('error', (error) => {
+					console.log(error);
+				})
+			}
+
+			async dataChanged() {
+				const userData = await idbKeyval.get('userData');
+				this.token = userData.accessToken;
+
+				this.$.detailAjax.generateRequest();
 			}
 
 			handleDetailResponse() {
+
 				const date = new Date(this.detailData.created_at);
 				const day = date.getDate();
 				const month = date.getMonth();
 				const year = date.getFullYear();
 
 				this.goodDate = `${month}/${day}/${year}`;
+
+				requestIdleCallback(() => {
+					console.log('called');
+					this.$.commentsAjax.generateRequest();
+				});
 			}
 
-			visit() {
-				window.open(this.detailData.html_url);
+			handleCommentsResponse() {
+				console.log(this.commentsData);
+				if (this.commentsData.length < 1) {
+					this.noComments = true;
+				} else {
+					this.noComments = false;
+				}
 			}
-			
+
+			async commentConfirm() {
+				const userData = await idbKeyval.get('userData');
+				this.token = userData.accessToken;
+
+				fetch(`https://api.github.com/repos/${this.subroute.__queryParams.owner}/${this.subroute.__queryParams.repo}/issues/${this.subroute.__queryParams.number}/comments?access_token=${this.token}`, {
+					method: 'POST',
+					body: JSON.stringify({
+						"body": this.myComment
+					})
+				}).then((response) => {
+					return response.json();
+				}).then((data) => {
+					console.log(data);
+
+					this.$.commentsAjax.generateRequest();
+
+					requestIdleCallback(() => {
+						this.$.commentToast.open();
+					});
+				})
+			}
+
+			openRespondDialog() {
+				this.$.respondDialog.open();
+			}
+
 		}
 
 		window.customElements.define(MyDetailView.is, MyDetailView);

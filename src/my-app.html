@@ -65,11 +65,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color: black;
         font-weight: bold;
       }
-
+      
       a {
         outline: none;
       }
-
+      
       .menuToolbar {
         background: var(--app-primary-color);
         color: white;
@@ -79,8 +79,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <firebase-app name="myApp" messaging-sender-id="701882251983" auth-domain="polyhub-28ed3.firebaseapp.com" database-url="https://polyhub-28ed3.firebaseio.com" api-key="AIzaSyDMZFvR53ivGYp_1AJ_6VszraC0k_z-uiw">
-		</firebase-app>
+    <firebase-app name="myApp" messaging-sender-id="701882251983" auth-domain="polyhub-28ed3.firebaseapp.com" database-url="https://polyhub-28ed3.firebaseio.com"
+      api-key="AIzaSyDMZFvR53ivGYp_1AJ_6VszraC0k_z-uiw">
+    </firebase-app>
 
     <app-location route="{{route}}"></app-location>
     <app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
@@ -167,6 +168,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         const userData = await idbKeyval.get('userData');
         console.log(userData);
 
+        console.log(this.loggedIn);
         if (userData === undefined) {
           this.loggedIn = false;
         } else {
@@ -181,15 +183,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           return;
         }
 
+        // If no page was found in the route data, page will be an empty string.
+        // Deault to 'view1' in that case.
+        this.page = page || 'view1';
+
         if (page === 'view1') {
           this.loggedIn = false;
         } else {
           this.loggedIn = true;
         }
-
-        // If no page was found in the route data, page will be an empty string.
-        // Deault to 'view1' in that case.
-        this.page = page || 'view1';
 
         // Close a non-persistent drawer when the page & route are changed.
         if (!this.$.drawer.persistent) {
