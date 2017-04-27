@@ -10,6 +10,7 @@
 		"src/my-detail-view.html",
 		"src/my-assigned-view.html",
 		"src/my-search-view.html",
+    "src/my-repo-detail-view.html",
     "src/my-view404.html"
   ],
   "sources": [

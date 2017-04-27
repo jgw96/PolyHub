@@ -103,6 +103,7 @@
 								<div class="card-actions">
 									<paper-button on-tap="issues">ISSUES</paper-button>
 									<paper-button on-tap="favorite">FAVORITE</paper-button>
+									<paper-button on-tap="repoDetail">DETAIL</paper-button>
 								</div>
 							</paper-card>
 						</div>
@@ -244,6 +245,14 @@
 				requestIdleCallback(() => {
 					this.$.reposAjax.generateRequest();
 				});
+			}
+
+			repoDetail($event) {
+				console.log($event.model.__data.repo);
+				const repo = $event.model.__data.repo;
+
+				window.history.pushState({}, null, '/repo-detail-view' + '?' + 'owner=' + repo.owner.login + '&' + 'repo=' + repo.name);
+				window.dispatchEvent(new CustomEvent('location-changed'));
 			}
 		}
 

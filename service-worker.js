@@ -42,12 +42,11 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// notifications
-importScripts('https://www.gstatic.com/firebasejs/3.5.2/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/3.5.2/firebase-messaging.js');
-
-firebase.initializeApp({
-  'messagingSenderId': '701882251983'
+self.addEventListener('push', (event) => {
+  const promiseChain = self.registration.showNotification('PolyHub', {
+    body: event.data.text(),
+    icon: 'images/icon.png',
+  });
+  
+  event.waitUntil(promiseChain);
 });
-
-const messaging = firebase.messaging();

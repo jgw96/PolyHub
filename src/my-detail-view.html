@@ -75,9 +75,17 @@
 			.commentsHeader {
 				margin-top: 60px;
 			}
+			
+			.closeButtonDiv {
+				display: flex;
+			}
+			
+			.closeButton {
+				background: var(--app-primary-color);
+				color: white;
+				flex-grow: 1;
+			}
 		</style>
-
-		<h1>hello world</h1>
 
 		<app-location route="{{route}}"></app-location>
 		<app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
@@ -99,6 +107,10 @@
 				<div class="markdown-html"></div>
 			</marked-element>
 		</main>
+
+		<div class="closeButtonDiv">
+			<paper-button class="closeButton" raised on-tap="closeIssue">CLOSE</paper-button>
+		</div>
 
 		<template is="dom-if" if="{{!noComments}}">
 			<h1 class="commentsHeader">Comments</h1>
@@ -229,6 +241,26 @@
 
 			openRespondDialog() {
 				this.$.respondDialog.open();
+			}
+
+			async closeIssue() {
+				const userData = await idbKeyval.get('userData');
+				this.token = userData.accessToken;
+
+				fetch(`https://api.github.com/repos/${this.subroute.__queryParams.owner}/${this.subroute.__queryParams.repo}/issues/${this.subroute.__queryParams.number}?access_token=${this.token}`, {
+					method: 'PATCH',
+					body: JSON.stringify({
+						"state": 'closed'
+					})
+				}).then((response) => {
+					return response.json();
+				}).then((data) => {
+					console.log(data);
+
+					requestIdleCallback(() => {
+						window.history.back();
+					});
+				})
 			}
 
 		}

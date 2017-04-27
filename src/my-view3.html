@@ -39,7 +39,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			}
 		</style>
 
-		<iron-ajax id="userAjax" url="https://api.github.com/user?access_token={{token}}" handle-as="json" on-response="handleResponse" last-response="{{userData}}"></iron-ajax>
+		<iron-ajax id="userAjax" url="https://api.github.com/user?access_token={{token}}" handle-as="json" on-response="handleResponse"
+		 last-response="{{userData}}"></iron-ajax>
 
 		<firebase-messaging app-name="myApp" id="messaging" token="{{notifyToken}}" on-message="handleMessage">
 		</firebase-messaging>
@@ -122,7 +123,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 						console.log(this.notifyToken);
 
 						idbKeyval.set('notifyToken', this.notifyToken);
-						
+
 						fetch('http://localhost:8080/token', {
 							method: 'POST',
 							body: JSON.stringify({
@@ -138,7 +139,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 					// permission was denied
 
 					this.$.noNotify.open();
-					
+
 					this.notifyIcon = 'social:notifications-off'
 					idbKeyval.set('notifications', this.notifyIcon);
 

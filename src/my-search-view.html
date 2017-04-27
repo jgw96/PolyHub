@@ -144,7 +144,7 @@
 			</paper-dialog-scrollable>
 			<div class="buttons">
 				<paper-button dialog-dismiss>Cancel</paper-button>
-				<paper-button dialog-confirm on-tap="visit">Visit</paper-button>
+				<paper-button dialog-confirm on-tap="openDetail">Detail</paper-button>
 				<paper-button dialog-confirm autofocus on-tap="star">Star</paper-button>
 			</div>
 		</paper-dialog>
@@ -256,8 +256,9 @@
 				this.$.followToast.open();
 			}
 
-			visit() {
-				window.open(this.detailData.html_url);
+			openDetail() {
+				window.history.pushState({}, null, '/repo-detail-view' + '?' + 'owner=' + this.detailData.owner.login + '&' + 'repo=' + this.detailData.name);
+				window.dispatchEvent(new CustomEvent('location-changed'));
 			}
 		}
 
