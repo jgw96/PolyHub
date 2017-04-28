@@ -156,7 +156,6 @@
 			}
 
 			handleDetailResponse() {
-				console.log(this.detailData);
 			}
 
 			openIssues() {
@@ -170,7 +169,6 @@
 
 			notify() {
 				navigator.serviceWorker.getRegistration().then((registration) => {
-					console.log(registration);
 
 					const subscribeOptions = {
 						userVisibleOnly: true,

@@ -1,9 +1,12 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../bower_components/app-route/app-location.html">
@@ -78,12 +81,21 @@
 			
 			.closeButtonDiv {
 				display: flex;
+				flex-direction: column;
 			}
 			
 			.closeButton {
 				background: var(--app-primary-color);
 				color: white;
 				flex-grow: 1;
+				margin-top: 20px;
+			}
+
+			.labelsBlock {
+				display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+				margin-top: 20px;
 			}
 		</style>
 
@@ -96,10 +108,22 @@
 		<iron-ajax id="commentsAjax" url="[[detailData.comments_url]]?access_token=[[token]]" handle-as="json" on-response="handleCommentsResponse"
 		 last-response="{{commentsData}}"></iron-ajax>
 
+		<iron-ajax id="labelsAjax" url="https://api.github.com/repos/[[subroute.__queryParams.owner]]/[[subroute.__queryParams.repo]]/labels?access_token=[[token]]&limit=50"
+		 handle-as="json" on-response="handleLabelsResponse" last-response="{{labelsData}}"></iron-ajax>
+
+		<iron-ajax id="issueLabelsAjax" url="https://api.github.com/repos/[[subroute.__queryParams.owner]]/[[subroute.__queryParams.repo]]/issues/[[subroute.__queryParams.number]]/labels?access_token=[[token]]&limit=50"
+		 handle-as="json" on-response="handleIssueLabelsResponse" last-response="{{issueLabelsData}}"></iron-ajax>
+
 		<div class="topBlock">
 			<h1>[[detailData.title]]</h1>
 			<h2 class="detailDataHeader">Opened by [[detailData.user.login]] on [[goodDate]]</h2>
 			<iron-image style="width:100px; height:100px; border-radius: 50%; background-color: lightgray;" sizing="cover" preload src="[[detailData.user.avatar_url]]"></iron-image>
+		</div>
+
+		<div class="labelsBlock">
+			<template is="dom-repeat" items="{{issueLabelsData}}">
+				<div class="label" style$="background: #{{ item.color }}; color: white; padding: 0.5rem; min-width: 5rem; text-align: center;" label="[[item.name]]">[[item.name]]</div>
+			</template>
 		</div>
 
 		<main>
@@ -109,6 +133,14 @@
 		</main>
 
 		<div class="closeButtonDiv">
+			<paper-dropdown-menu label="Add a Label" selected-item-label="{{selected}}">
+				<paper-listbox id="labelsListbox" slot="dropdown-content" class="dropdown-content">
+					<template is="dom-repeat" items="{{labelsData}}">
+						<paper-item label="[[item.name]]">[[item.name]]</paper-item>
+					</template>
+				</paper-listbox>
+			</paper-dropdown-menu>
+
 			<paper-button class="closeButton" raised on-tap="closeIssue">CLOSE</paper-button>
 		</div>
 
@@ -147,6 +179,7 @@
 		<paper-fab on-tap="openRespondDialog" icon="reply"></paper-fab>
 
 		<paper-toast id="commentToast" text="Comment Posted"></paper-toast>
+		<paper-toast id="labelsToast" text="Label added"></paper-toast>
 
 	</template>
 
@@ -167,6 +200,7 @@
 					commentsData: Object,
 					myComment: String,
 					responseData: Object,
+					labelsData: Object,
 					noComments: {
 						type: Boolean
 					}
@@ -180,10 +214,32 @@
 				this.token = userData.accessToken;
 
 				this.$.detailAjax.generateRequest();
+				this.$.labelsAjax.generateRequest();
+				this.$.issueLabelsAjax.generateRequest();
 
-				this.$.respondAjax.addEventListener('error', (error) => {
-					console.log(error);
-				})
+				this.$.labelsListbox.addEventListener('iron-select', () => {
+					setTimeout(() => {
+						this.addLabel();
+					}, 500);
+				});
+			}
+
+			addLabel() {
+				fetch(`https://api.github.com/repos/${this.subroute.__queryParams.owner}/${this.subroute.__queryParams.repo}/issues/${this.subroute.__queryParams.number}/labels?access_token=${this.token}`, {
+					method: 'POST',
+					body: JSON.stringify([
+						this.selected
+					])
+				}).then((response) => {
+					return response.json();
+				}).then((data) => {
+
+					this.$.labelsToast.open();
+				});
+			}
+
+			handleIssueLabelsResponse() {
+
 			}
 
 			async dataChanged() {
@@ -191,6 +247,7 @@
 				this.token = userData.accessToken;
 
 				this.$.detailAjax.generateRequest();
+				this.$.issueLabelsAjax.generateRequest();
 			}
 
 			handleDetailResponse() {
@@ -203,18 +260,19 @@
 				this.goodDate = `${month}/${day}/${year}`;
 
 				requestIdleCallback(() => {
-					console.log('called');
 					this.$.commentsAjax.generateRequest();
 				});
 			}
 
 			handleCommentsResponse() {
-				console.log(this.commentsData);
 				if (this.commentsData.length < 1) {
 					this.noComments = true;
 				} else {
 					this.noComments = false;
 				}
+			}
+
+			handleLabelsResponse() {
 			}
 
 			async commentConfirm() {
@@ -229,14 +287,13 @@
 				}).then((response) => {
 					return response.json();
 				}).then((data) => {
-					console.log(data);
 
 					this.$.commentsAjax.generateRequest();
 
 					requestIdleCallback(() => {
 						this.$.commentToast.open();
 					});
-				})
+				});
 			}
 
 			openRespondDialog() {
@@ -255,7 +312,6 @@
 				}).then((response) => {
 					return response.json();
 				}).then((data) => {
-					console.log(data);
 
 					requestIdleCallback(() => {
 						window.history.back();

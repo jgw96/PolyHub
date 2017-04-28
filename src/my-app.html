@@ -167,9 +167,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         const userData = await idbKeyval.get('userData');
-        console.log(userData);
 
-        console.log(this.loggedIn);
         if (userData === undefined) {
           this.loggedIn = false;
         } else {

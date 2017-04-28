@@ -94,8 +94,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 							idbKeyval.set('userData', response.credential);
 							idbKeyval.set('userInfo', response.user.uid);
 
-							console.log(response);
-
 							if (navigator.credentials) {
 								const cred = new FederatedCredential({
 									id: response.credential.providerId,
@@ -104,7 +102,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 									iconURL: response.user.photoURL
 								});
 								navigator.credentials.store(cred).then(() => {
-									console.log('stored');
 									window.history.pushState({}, null, '/main-view');
 									window.dispatchEvent(new CustomEvent('location-changed'));
 								});

@@ -89,7 +89,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				super.connectedCallback();
 				const notifyStatus = await idbKeyval.get('notifications');
 				if (notifyStatus !== undefined) {
-					console.log(notifyStatus);
 					this.notifyIcon = notifyStatus;
 				}
 
@@ -104,11 +103,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			}
 
 			handleMessage() {
-				console.log('called');
 			}
 
 			handleNotifyResponse() {
-				console.log(this.notifyData);
 			}
 
 			notify() {
@@ -120,8 +117,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 					this.$.yesNotify.open();
 
 					setTimeout(() => {
-						console.log(this.notifyToken);
-
 						idbKeyval.set('notifyToken', this.notifyToken);
 
 						fetch('http://localhost:8080/token', {
@@ -142,8 +137,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 					this.notifyIcon = 'social:notifications-off'
 					idbKeyval.set('notifications', this.notifyIcon);
-
-					console.log(err);
 				});
 			}
 		}

@@ -116,7 +116,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				super.connectedCallback();
 
 				this.repos = await idbKeyval.get('favorites');
-				console.log(this.repos);
 				if (this.repos === undefined) {
 					this.noRepos = true;
 				} else {
@@ -125,7 +124,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			}
 
 			async dataChanged() {
-				console.log('hello world');
 				this.repos = await idbKeyval.get('favorites');
 
 				if (this.repos === undefined) {

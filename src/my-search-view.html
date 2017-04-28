@@ -204,18 +204,15 @@
 			}
 
 			handleSearchResponse() {
-				console.log(this.searchData);
 				this.itemsToSearch = this.searchData.items;
 			}
 
 			search() {
-				console.log(this.selected);
 				if (this.selected === 'users') {
 					this.usersSelected = true;
 				} else {
 					this.usersSelected = false;
 				}
-				console.log(this.searchTerm);
 				this.$.searchAjax.generateRequest();
 			}
 
@@ -225,34 +222,28 @@
 
 			detail($event) {
 				this.detailData = $event.model.__data.item;
-				console.log(this.detailData);
 				this.$.detailDialog.open();
 			}
 
 			userDetail($event) {
 				this.userDetailData = $event.model.__data.item;
-				console.log(this.userDetailData);
 				window.open(this.userDetailData.html_url);
 			}
 
 			star() {
-				console.log(this.detailData);
 				this.$.starAjax.generateRequest();
 			}
 
 			follow($event) {
-				console.log($event.model.__data);
 				this.userName = $event.model.__data.item.login;
 				this.$.followAjax.generateRequest();
 			}
 
 			handleStarredResponse() {
-				console.log(this.starData);
 				this.$.starredToast.open();
 			}
 
 			handleFollowResponse() {
-				console.log(this.followData);
 				this.$.followToast.open();
 			}
 
